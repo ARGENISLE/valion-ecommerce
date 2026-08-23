@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --valion-navy: #0f172a;
+  --valion-amber: #f59e0b;
+  --valion-orange: #ff6b00;
+  --valion-bg: #f8fafc;
+  --valion-ink: #1e293b;
+}
+
+body {
+  background-color: var(--valion-bg);
+  color: var(--valion-ink);
+}
+
+.btn-cta {
+  background-color: var(--valion-orange);
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn-cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
