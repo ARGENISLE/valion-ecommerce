@@ -9,7 +9,7 @@ export default function Checkout() {
   const [metodoPago, setMetodoPago] = useState("tarjeta");
 
   const subtotal = 99.97;
-  const envio = 0;
+  const envio: number = 0;
   const total = subtotal + envio;
 
   function siguientePaso() {
