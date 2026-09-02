@@ -1,17 +1,23 @@
-const productos = [
-  { id: 1, nombre: "Audífonos Inalámbricos", categoria: "Electrónica", precio: 29.99, oferta: 19.99 },
-  { id: 2, nombre: "Set de Ollas Antiadherentes", categoria: "Hogar", precio: 89.99, oferta: null },
-  { id: 3, nombre: "Zapatillas Running Pro", categoria: "Deportes", precio: 54.99, oferta: 39.99 },
-  { id: 4, nombre: "Cámara de Seguridad WiFi", categoria: "Electrónica", precio: 45.0, oferta: null },
-  { id: 5, nombre: "Camiseta Algodón Premium", categoria: "Moda", precio: 15.0, oferta: 9.99 },
-  { id: 6, nombre: "Set de Maquillaje Profesional", categoria: "Belleza", precio: 34.99, oferta: null },
-  { id: 7, nombre: "Bicicleta Montaña 21V", categoria: "Deportes", precio: 210.0, oferta: 179.99 },
-  { id: 8, nombre: "Robot de Cocina Multifunción", categoria: "Hogar", precio: 120.0, oferta: null },
-];
+import { supabase, Producto } from "@/lib/supabase";
 
 const categorias = ["Todas", "Electrónica", "Hogar", "Moda", "Deportes", "Belleza"];
 
-export default function Productos() {
+async function obtenerProductos(): Promise<Producto[]> {
+  const { data, error } = await supabase
+    .from("productos")
+    .select("*")
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Error cargando productos:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export default async function Productos() {
+  const productos = await obtenerProductos();
+
   return (
     <main className="min-h-screen bg-valion-bg">
       {/* Header simple */}
@@ -79,40 +85,46 @@ export default function Productos() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {productos.map((p) => (
-                <a
-                  key={p.id}
-                  href={`/productos/${p.id}`}
-                  className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
-                >
-                  <div className="mb-3 flex h-32 items-center justify-center rounded bg-white">
-                    <span className="text-4xl">📦</span>
-                  </div>
-                  <span className="text-xs text-slate-400">{p.categoria}</span>
-                  <span className="mt-1 text-sm font-medium text-valion-ink">
-                    {p.nombre}
-                  </span>
-                  <div className="mt-2 flex items-center gap-2">
-                    {p.oferta ? (
-                      <>
-                        <span className="font-display text-lg font-extrabold text-valion-orange">
-                          ${p.oferta}
-                        </span>
-                        <span className="text-xs text-slate-400 line-through">
+            {productos.length === 0 ? (
+              <div className="rounded-lg border border-slate-200 bg-white p-10 text-center text-slate-500">
+                No hay productos disponibles en este momento.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {productos.map((p) => (
+                  <a
+                    key={p.id}
+                    href={`/productos/${p.id}`}
+                    className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                  >
+                    <div className="mb-3 flex h-32 items-center justify-center rounded bg-white">
+                      <span className="text-4xl">📦</span>
+                    </div>
+                    <span className="text-xs text-slate-400">{p.categoria}</span>
+                    <span className="mt-1 text-sm font-medium text-valion-ink">
+                      {p.nombre}
+                    </span>
+                    <div className="mt-2 flex items-center gap-2">
+                      {p.precio_oferta ? (
+                        <>
+                          <span className="font-display text-lg font-extrabold text-valion-orange">
+                            ${p.precio_oferta}
+                          </span>
+                          <span className="text-xs text-slate-400 line-through">
+                            ${p.precio}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-display text-lg font-extrabold text-valion-ink">
                           ${p.precio}
                         </span>
-                      </>
-                    ) : (
-                      <span className="font-display text-lg font-extrabold text-valion-ink">
-                        ${p.precio}
-                      </span>
-                    )}
-                  </div>
-                  <button className="btn-cta mt-3 text-xs">Agregar al carrito</button>
-                </a>
-              ))}
-            </div>
+                      )}
+                    </div>
+                    <button className="btn-cta mt-3 text-xs">Agregar al carrito</button>
+                  </a>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </div>
