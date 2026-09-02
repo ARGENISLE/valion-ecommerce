@@ -1,5 +1,7 @@
 import { supabase, Producto } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 const categorias = ["Todas", "Electrónica", "Hogar", "Moda", "Deportes", "Belleza"];
 
 async function obtenerProductos(): Promise<Producto[]> {
