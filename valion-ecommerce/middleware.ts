@@ -23,18 +23,18 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  const isLoginPage = request.nextUrl.pathname === "/admin/login";
+
+  if (isLoginPage) {
+    return response;
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname === "/admin/login";
-
-  if (!user && !isLoginPage) {
+  if (!user) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
-  }
-
-  if (user && isLoginPage) {
-    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return response;
