@@ -1,3 +1,5 @@
+import BotonCerrarSesion from "./BotonCerrarSesion";
+
 const kpis = [
   { label: "Ventas hoy", valor: "$1,248.90", cambio: "+12%" },
   { label: "Ventas esta semana", valor: "$8,930.40", cambio: "+8%" },
@@ -57,6 +59,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <span>Administrador</span>
             <div className="h-8 w-8 rounded-full bg-valion-orange" />
+            <BotonCerrarSesion />
           </div>
         </header>
 
