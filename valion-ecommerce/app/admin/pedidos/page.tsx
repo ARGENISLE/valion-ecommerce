@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import BotonCerrarSesion from "../BotonCerrarSesion";
 type Estado = "Pendiente" | "Pagado" | "En preparación" | "Enviado" | "Entregado" | "Cancelado";
 
 const estados: Estado[] = ["Pendiente", "Pagado", "En preparación", "Enviado", "Entregado", "Cancelado"];
@@ -84,9 +84,10 @@ export default function AdminPedidos() {
         <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
           <h1 className="font-display text-lg font-bold text-valion-ink">Pedidos</h1>
           <div className="flex items-center gap-3 text-sm text-slate-500">
-            <span>Administrador</span>
-            <div className="h-8 w-8 rounded-full bg-valion-orange" />
-          </div>
+  <span>Administrador</span>
+  <div className="h-8 w-8 rounded-full bg-valion-orange" />
+  <BotonCerrarSesion />
+</div>
         </header>
 
         <main className="p-6">
