@@ -45,6 +45,7 @@ export default function AdminLogin() {
             VALION
           </span>
           <p className="mt-1 text-sm text-slate-500">Panel de administración</p>
+          <p className="mt-1 text-xs text-red-400">Versión de prueba: v3</p>
         </div>
 
         <form onSubmit={iniciarSesion} className="mt-6 flex flex-col gap-4">
