@@ -13,20 +13,28 @@ export default function AdminLogin() {
 
   async function iniciarSesion(e: React.FormEvent) {
     e.preventDefault();
+    console.log("Intentando iniciar sesión con:", email);
     setError("");
     setCargando(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setCargando(false);
+      setCargando(false);
 
-    if (error) {
-      setError("Correo o contraseña incorrectos.");
-      return;
+      if (authError) {
+        setError("Correo o contraseña incorrectos: " + authError.message);
+        return;
+      }
+
+      window.location.href = "/admin";
+    } catch (err: any) {
+      setCargando(false);
+      setError("Error inesperado: " + (err?.message ?? String(err)));
     }
-
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
