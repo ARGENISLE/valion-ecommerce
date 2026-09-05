@@ -1,5 +1,5 @@
 "use client";
-
+import BotonCerrarSesion from "../BotonCerrarSesion";
 const ventasPorMes = [
   { mes: "Mar", valor: 18200 },
   { mes: "Abr", valor: 21500 },
@@ -65,6 +65,7 @@ export default function AdminReportes() {
               Exportar Excel
             </button>
             <div className="h-8 w-8 rounded-full bg-valion-orange" />
+          <BotonCerrarSesion />
           </div>
         </header>
 
