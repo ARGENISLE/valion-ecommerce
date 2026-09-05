@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { supabase, Producto } from "@/lib/supabase";
-
+import BotonCerrarSesion from "../BotonCerrarSesion";
 const menuAdmin = [
   { nombre: "Dashboard", href: "/admin", icono: "📊" },
   { nombre: "Pedidos", href: "/admin/pedidos", icono: "🧾" },
@@ -96,6 +96,7 @@ export default function InventarioClient({
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <span>Administrador</span>
             <div className="h-8 w-8 rounded-full bg-valion-orange" />
+          <BotonCerrarSesion />
           </div>
         </header>
 
