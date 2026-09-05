@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import BotonCerrarSesion from "../BotonCerrarSesion";
 type Cupon = {
   id: number;
   codigo: string;
@@ -109,6 +109,7 @@ export default function AdminMarketing() {
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <span>Administrador</span>
             <div className="h-8 w-8 rounded-full bg-valion-orange" />
+          <BotonCerrarSesion />
           </div>
         </header>
 
