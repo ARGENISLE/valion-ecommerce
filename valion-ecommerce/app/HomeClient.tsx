@@ -74,7 +74,7 @@ export default function HomeClient({ destacados }: { destacados: Producto[] }) {
         </h2>
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
           {categorias.map((cat) => (
-            
+            <a
               key={cat.nombre}
               href={`/productos?categoria=${encodeURIComponent(cat.nombre)}`}
               className="flex flex-col items-center gap-2 rounded-lg border border-slate-200 bg-white p-4 text-center shadow-sm transition hover:shadow-md"
