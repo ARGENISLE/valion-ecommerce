@@ -1,39 +1,36 @@
 "use client";
 
-import { useState } from "react";
-
-type ItemCarrito = {
-  id: number;
-  nombre: string;
-  precio: number;
-  cantidad: number;
-};
-
-const itemsIniciales: ItemCarrito[] = [
-  { id: 1, nombre: "Audífonos Inalámbricos", precio: 19.99, cantidad: 1 },
-  { id: 3, nombre: "Zapatillas Running Pro", precio: 39.99, cantidad: 2 },
-];
+import { useEffect, useState } from "react";
+import {
+  ItemCarrito,
+  obtenerCarrito,
+  actualizarCantidad,
+  eliminarDelCarrito,
+} from "@/lib/cart";
 
 export default function Carrito() {
-  const [items, setItems] = useState<ItemCarrito[]>(itemsIniciales);
+  const [items, setItems] = useState<ItemCarrito[]>([]);
   const [cupon, setCupon] = useState("");
   const [descuentoAplicado, setDescuentoAplicado] = useState(0);
   const [mensajeCupon, setMensajeCupon] = useState("");
 
+  useEffect(() => {
+    function cargar() {
+      setItems(obtenerCarrito());
+    }
+    cargar();
+    window.addEventListener("carrito-actualizado", cargar);
+    return () => window.removeEventListener("carrito-actualizado", cargar);
+  }, []);
+
   function cambiarCantidad(id: number, delta: number) {
-    setItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, cantidad: Math.max(1, item.cantidad + delta) }
-            : item
-        )
-        .filter((item) => item.cantidad > 0)
-    );
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+    actualizarCantidad(id, Math.max(1, item.cantidad + delta));
   }
 
   function eliminarItem(id: number) {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    eliminarDelCarrito(id);
   }
 
   function aplicarCupon() {
@@ -51,9 +48,12 @@ export default function Carrito() {
   const envio = subtotal > 50 ? 0 : 5.99;
   const total = subtotal - descuento + (items.length > 0 ? envio : 0);
 
+  function irAlCheckout() {
+    window.location.href = "/checkout";
+  }
+
   return (
     <main className="min-h-screen bg-valion-bg">
-      {/* Header */}
       <header className="bg-valion-navy text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <a href="/" className="font-display text-2xl font-extrabold tracking-tight">
@@ -79,7 +79,6 @@ export default function Carrito() {
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
-            {/* Lista de productos */}
             <div className="md:col-span-2">
               <div className="flex flex-col gap-4">
                 {items.map((item) => (
@@ -124,7 +123,6 @@ export default function Carrito() {
               </div>
             </div>
 
-            {/* Resumen */}
             <div>
               <div className="rounded-lg border border-slate-200 bg-white p-5">
                 <h2 className="font-display text-lg font-bold text-valion-ink">
@@ -178,7 +176,7 @@ export default function Carrito() {
                   <span>${total.toFixed(2)}</span>
                 </div>
 
-                <button className="btn-cta mt-5 w-full text-sm">
+                <button onClick={irAlCheckout} className="btn-cta mt-5 w-full text-sm">
                   Proceder al pago
                 </button>
 
