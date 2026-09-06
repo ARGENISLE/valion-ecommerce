@@ -151,7 +151,7 @@ export default function FichaProductoClient({
             </h2>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {relacionados.map((p) => (
-                
+                <a
                   key={p.id}
                   href={`/productos/${p.id}`}
                   className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
