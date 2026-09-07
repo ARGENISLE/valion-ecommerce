@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Producto } from "@/lib/supabase";
+import { agregarAlCarrito } from "@/lib/cart";
 
 const categorias = ["Todas", "Electrónica", "Hogar", "Moda", "Deportes", "Belleza"];
 
@@ -32,6 +33,15 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
     });
   }
 
+  function handleAgregar(e: React.MouseEvent, p: Producto) {
+    e.preventDefault();
+    e.stopPropagation();
+    agregarAlCarrito(
+      { id: p.id, nombre: p.nombre, precio: precioEfectivo(p) },
+      1
+    );
+  }
+
   const productosFiltrados = useMemo(() => {
     let resultado = productos.filter(
       (p) =>
@@ -50,7 +60,6 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
 
   return (
     <div className="mt-6 flex flex-col gap-6 md:flex-row">
-      {/* Filtros */}
       <aside className="w-full shrink-0 md:w-56">
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <h2 className="mb-3 font-display text-sm font-bold text-valion-ink">
@@ -105,7 +114,6 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
         </div>
       </aside>
 
-      {/* Grid de productos */}
       <section className="flex-1">
         <div className="mb-4 flex items-center justify-between text-sm text-slate-500">
           <span>{productosFiltrados.length} productos encontrados</span>
@@ -127,7 +135,7 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {productosFiltrados.map((p) => (
-              <a
+              
                 key={p.id}
                 href={`/productos/${p.id}`}
                 className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
@@ -155,7 +163,13 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
                     </span>
                   )}
                 </div>
-                <button className="btn-cta mt-3 text-xs">Agregar al carrito</button>
+                <button
+                  onClick={(e) => handleAgregar(e, p)}
+                  disabled={p.stock <= 0}
+                  className="btn-cta mt-3 text-xs disabled:opacity-50"
+                >
+                  {p.stock > 0 ? "Agregar al carrito" : "Agotado"}
+                </button>
               </a>
             ))}
           </div>
