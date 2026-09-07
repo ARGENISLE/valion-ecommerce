@@ -1,23 +1,145 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { ItemCarrito, obtenerCarrito, vaciarCarrito } from "@/lib/cart";
 
 const pasos = ["Envío", "Pago", "Confirmación"];
 
 export default function Checkout() {
   const [pasoActual, setPasoActual] = useState(0);
   const [metodoPago, setMetodoPago] = useState("tarjeta");
+  const [items, setItems] = useState<ItemCarrito[]>([]);
+  const [procesando, setProcesando] = useState(false);
+  const [error, setError] = useState("");
+  const [numeroPedido, setNumeroPedido] = useState("");
 
-  const subtotal = 99.97;
-  const envio: number = 0;
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [ciudad, setCiudad] = useState("");
+  const [codigoPostal, setCodigoPostal] = useState("");
+  const [telefono, setTelefono] = useState("");
+
+  useEffect(() => {
+    setItems(obtenerCarrito());
+  }, []);
+
+  const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  const envio: number = subtotal > 50 || subtotal === 0 ? 0 : 5.99;
   const total = subtotal + envio;
 
   function siguientePaso() {
+    if (pasoActual === 0) {
+      if (!nombre || !email || !direccion || !telefono) {
+        setError("Por favor completa todos los campos obligatorios.");
+        return;
+      }
+    }
+    setError("");
     setPasoActual((p) => Math.min(p + 1, pasos.length - 1));
   }
 
   function pasoAnterior() {
     setPasoActual((p) => Math.max(p - 1, 0));
+  }
+
+  async function confirmarPedido() {
+    setError("");
+    setProcesando(true);
+    try {
+      let clienteId: number;
+      const { data: clienteExistente } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (clienteExistente) {
+        clienteId = clienteExistente.id;
+        await supabase
+          .from("clientes")
+          .update({
+            nombre,
+            telefono,
+            direccion: `${direccion}, ${ciudad} ${codigoPostal}`.trim(),
+          })
+          .eq("id", clienteId);
+      } else {
+        const { data: nuevoCliente, error: errorCliente } = await supabase
+          .from("clientes")
+          .insert({
+            nombre,
+            email,
+            telefono,
+            direccion: `${direccion}, ${ciudad} ${codigoPostal}`.trim(),
+            segmento: "Nuevo",
+          })
+          .select("id")
+          .single();
+        if (errorCliente || !nuevoCliente) throw new Error(errorCliente?.message || "No se pudo crear el cliente.");
+        clienteId = nuevoCliente.id;
+      }
+
+      const { data: pedido, error: errorPedido } = await supabase
+        .from("pedidos")
+        .insert({
+          cliente_id: clienteId,
+          total: total,
+          metodo_pago: metodoPago,
+          estado: "Pendiente",
+        })
+        .select("id")
+        .single();
+      if (errorPedido || !pedido) throw new Error(errorPedido?.message || "No se pudo crear el pedido.");
+
+      const itemsParaInsertar = items.map((item) => ({
+        pedido_id: pedido.id,
+        producto_id: item.id,
+        cantidad: item.cantidad,
+        precio_unitario: item.precio,
+      }));
+      const { error: errorItems } = await supabase
+        .from("pedido_items")
+        .insert(itemsParaInsertar);
+      if (errorItems) throw new Error(errorItems.message);
+
+      for (const item of items) {
+        const { data: productoActual } = await supabase
+          .from("productos")
+          .select("stock")
+          .eq("id", item.id)
+          .single();
+        if (productoActual) {
+          const nuevoStock = Math.max(0, productoActual.stock - item.cantidad);
+          await supabase
+            .from("productos")
+            .update({ stock: nuevoStock })
+            .eq("id", item.id);
+        }
+      }
+
+      setNumeroPedido(`VAL-${pedido.id.toString().padStart(5, "0")}`);
+      vaciarCarrito();
+      setProcesando(false);
+      setPasoActual(2);
+    } catch (err: any) {
+      setProcesando(false);
+      setError("Error al procesar el pedido: " + (err?.message ?? String(err)));
+    }
+  }
+
+  if (items.length === 0 && pasoActual < 2) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-valion-bg px-4">
+        <div className="text-center">
+          <p className="text-slate-500">Tu carrito está vacío.</p>
+          <a href="/productos" className="mt-3 inline-block text-valion-orange hover:underline">
+            Explorar productos
+          </a>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -34,7 +156,6 @@ export default function Checkout() {
       </header>
 
       <div className="mx-auto max-w-4xl px-4 py-8">
-        {/* Indicador de pasos */}
         <div className="mb-8 flex items-center justify-center gap-4">
           {pasos.map((paso, i) => (
             <div key={paso} className="flex items-center gap-4">
@@ -68,7 +189,6 @@ export default function Checkout() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {/* Formulario según el paso */}
           <div className="md:col-span-2">
             <div className="rounded-lg border border-slate-200 bg-white p-6">
               {pasoActual === 0 && (
@@ -79,29 +199,43 @@ export default function Checkout() {
                   <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <input
                       placeholder="Nombre completo"
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
                     />
                     <input
                       placeholder="Correo electrónico"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
                     />
                     <input
                       placeholder="Dirección"
+                      value={direccion}
+                      onChange={(e) => setDireccion(e.target.value)}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
                     />
                     <input
                       placeholder="Ciudad"
+                      value={ciudad}
+                      onChange={(e) => setCiudad(e.target.value)}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm"
                     />
                     <input
                       placeholder="Código postal"
+                      value={codigoPostal}
+                      onChange={(e) => setCodigoPostal(e.target.value)}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm"
                     />
                     <input
                       placeholder="Teléfono"
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
                     />
                   </div>
+                  {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
                 </>
               )}
 
@@ -151,6 +285,7 @@ export default function Checkout() {
                       />
                     </div>
                   )}
+                  {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
                 </>
               )}
 
@@ -163,13 +298,10 @@ export default function Checkout() {
                     ¡Pedido confirmado!
                   </h2>
                   <p className="mt-2 text-sm text-slate-500">
-                    Tu pedido #VAL-10234 fue recibido y está siendo procesado.
+                    Tu pedido #{numeroPedido} fue recibido y está siendo procesado.
                     Te enviaremos un correo con el número de seguimiento.
                   </p>
-                  <a
-                    href="/"
-                    className="btn-cta mt-6 inline-block text-sm"
-                  >
+                  <a href="/" className="btn-cta mt-6 inline-block text-sm">
                     Volver al inicio
                   </a>
                 </div>
@@ -187,15 +319,18 @@ export default function Checkout() {
                   ) : (
                     <span />
                   )}
-                  <button onClick={siguientePaso} className="btn-cta text-sm">
-                    {pasoActual === 1 ? "Confirmar pedido" : "Continuar"}
+                  <button
+                    onClick={pasoActual === 1 ? confirmarPedido : siguientePaso}
+                    disabled={procesando}
+                    className="btn-cta text-sm disabled:opacity-50"
+                  >
+                    {procesando ? "Procesando..." : pasoActual === 1 ? "Confirmar pedido" : "Continuar"}
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Resumen */}
           {pasoActual < 2 && (
             <div>
               <div className="rounded-lg border border-slate-200 bg-white p-5">
@@ -203,6 +338,14 @@ export default function Checkout() {
                   Resumen
                 </h2>
                 <div className="mt-4 space-y-2 text-sm text-slate-600">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>{item.nombre} x{item.cantidad}</span>
+                      <span>${(item.precio * item.cantidad).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
