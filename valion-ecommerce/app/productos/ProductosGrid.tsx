@@ -127,7 +127,7 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
             <option value="mayor">Precio: mayor a menor</option>
           </select>
         </div>
-
+<a
         {productosFiltrados.length === 0 ? (
           <div className="rounded-lg border border-slate-200 bg-white p-10 text-center text-slate-500">
             No se encontraron productos con estos filtros.
