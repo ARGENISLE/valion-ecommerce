@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ItemCarrito, obtenerCarrito, vaciarCarrito } from "@/lib/cart";
+import { ItemCarrito, obtenerCarrito, vaciarCarrito, obtenerCuponAplicado, quitarCuponAplicado, CuponAplicado } from "@/lib/cart";
 
 const pasos = ["Envío", "Pago", "Confirmación"];
 
@@ -12,7 +12,8 @@ export default function Checkout() {
   const [items, setItems] = useState<ItemCarrito[]>([]);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState("");
-  const [numeroPedido, setNumeroPedido] = useState("");
+    const [numeroPedido, setNumeroPedido] = useState("");
+  const [cupon, setCupon] = useState<CuponAplicado | null>(null);
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -21,13 +22,16 @@ export default function Checkout() {
   const [codigoPostal, setCodigoPostal] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  useEffect(() => {
+    useEffect(() => {
     setItems(obtenerCarrito());
+    setCupon(obtenerCuponAplicado());
   }, []);
 
-  const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
-  const envio: number = subtotal > 50 || subtotal === 0 ? 0 : 5.99;
-  const total = subtotal + envio;
+    const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  const descuento = cupon ? subtotal * (cupon.descuentoPorcentaje / 100) : 0;
+  const envioBase: number = subtotal > 50 || subtotal === 0 ? 0 : 5.99;
+  const envio: number = cupon?.envioGratis ? 0 : envioBase;
+  const total = Math.max(0, subtotal - descuento + envio);
 
   function siguientePaso() {
     if (pasoActual === 0) {
@@ -81,7 +85,7 @@ export default function Checkout() {
         clienteId = nuevoCliente.id;
       }
 
-      const { data: pedido, error: errorPedido } = await supabase
+            const { data: pedido, error: errorPedido } = await supabase
         .from("pedidos")
         .insert({
           cliente_id: clienteId,
@@ -93,6 +97,19 @@ export default function Checkout() {
         .single();
       if (errorPedido || !pedido) throw new Error(errorPedido?.message || "No se pudo crear el pedido.");
 
+      if (cupon) {
+        const { data: cuponActual } = await supabase
+          .from("cupones")
+          .select("id, usos")
+          .eq("codigo", cupon.codigo)
+          .maybeSingle();
+        if (cuponActual) {
+          await supabase
+            .from("cupones")
+            .update({ usos: (cuponActual.usos ?? 0) + 1 })
+            .eq("id", cuponActual.id);
+        }
+      }
       const itemsParaInsertar = items.map((item) => ({
         pedido_id: pedido.id,
         producto_id: item.id,
@@ -119,8 +136,9 @@ export default function Checkout() {
         }
       }
 
-      setNumeroPedido(`VAL-${pedido.id.toString().padStart(5, "0")}`);
+           setNumeroPedido(`VAL-${pedido.id.toString().padStart(5, "0")}`);
       vaciarCarrito();
+      quitarCuponAplicado();
       setProcesando(false);
       setPasoActual(2);
     } catch (err: any) {
@@ -345,11 +363,17 @@ export default function Checkout() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                                <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
+                  {cupon && (
+                    <div className="flex justify-between text-valion-orange">
+                      <span>Descuento ({cupon.codigo})</span>
+                      <span>-${descuento.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Envío</span>
                     <span>{envio === 0 ? "Gratis" : `$${envio.toFixed(2)}`}</span>
