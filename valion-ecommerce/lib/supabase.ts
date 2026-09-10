@@ -16,4 +16,5 @@ export type Producto = {
   stock: number;
   umbral_stock_bajo: number;
   imagen_url: string | null;
+  variaciones: { tallas?: string[]; colores?: string[] } | null;
 };
