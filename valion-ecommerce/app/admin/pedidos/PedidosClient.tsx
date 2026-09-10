@@ -64,13 +64,77 @@ export default function PedidosClient({
     await supabase.from("pedidos").update({ estado: nuevoEstado }).eq("id", id);
   }
 
-  function formatearFecha(fechaIso: string) {
+    function formatearFecha(fechaIso: string) {
     return new Date(fechaIso).toLocaleDateString("es-VE", {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
   }
+
+  async function generarFacturaPDF() {
+    if (!pedidoSeleccionado) return;
+
+    if (!(window as any).jspdf) {
+      await new Promise<void>((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+        script.onload = () => resolve();
+        document.body.appendChild(script);
+      });
+    }
+
+    const { jsPDF } = (window as any).jspdf;
+    const doc = new jsPDF();
+    const numeroPedido = `VAL-${pedidoSeleccionado.id.toString().padStart(5, "0")}`;
+
+    doc.setFontSize(20);
+    doc.setTextColor(20, 30, 60);
+    doc.text("VALION", 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(120, 120, 120);
+    doc.text("Factura de venta", 14, 27);
+
+    doc.setDrawColor(230, 230, 230);
+    doc.line(14, 32, 196, 32);
+
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.text(`Pedido: #${numeroPedido}`, 14, 42);
+    doc.text(`Fecha: ${formatearFecha(pedidoSeleccionado.creado_en)}`, 14, 49);
+    doc.text(`Cliente: ${pedidoSeleccionado.clientes?.nombre ?? "—"}`, 14, 56);
+    doc.text(`Correo: ${pedidoSeleccionado.clientes?.email ?? "—"}`, 14, 63);
+    doc.text(`Método de pago: ${pedidoSeleccionado.metodo_pago}`, 14, 70);
+
+    let y = 85;
+    doc.setFontSize(10);
+    doc.setTextColor(120, 120, 120);
+    doc.text("Producto", 14, y);
+    doc.text("Cant.", 130, y);
+    doc.text("Subtotal", 165, y);
+    y += 3;
+    doc.line(14, y, 196, y);
+    y += 8;
+
+    doc.setTextColor(30, 30, 30);
+    items.forEach((it) => {
+      doc.text(it.productos?.nombre ?? "Producto", 14, y);
+      doc.text(String(it.cantidad), 130, y);
+      doc.text(`$${(it.precio_unitario * it.cantidad).toFixed(2)}`, 165, y);
+      y += 8;
+    });
+
+    y += 4;
+    doc.line(14, y, 196, y);
+    y += 10;
+    doc.setFontSize(13);
+    doc.setTextColor(20, 30, 60);
+    doc.text(`Total: $${pedidoSeleccionado.total.toFixed(2)}`, 140, y);
+
+    doc.save(`factura-${numeroPedido}.pdf`);
+  }
+
+  return (
 
   return (
     <div className="flex min-h-screen bg-valion-bg">
@@ -233,8 +297,10 @@ export default function PedidosClient({
               </select>
             </div>
 
-            <div className="mt-6 flex gap-2">
-              <button className="flex-1 rounded-md border border-valion-navy py-2 text-sm font-medium text-valion-navy hover:bg-valion-navy hover:text-white">
+                          <button
+                onClick={generarFacturaPDF}
+                className="flex-1 rounded-md border border-valion-navy py-2 text-sm font-medium text-valion-navy hover:bg-valion-navy hover:text-white"
+              >
                 Generar factura PDF
               </button>
               <button
