@@ -134,7 +134,7 @@ export default function PedidosClient({
     doc.save(`factura-${numeroPedido}.pdf`);
   }
 
-  return (
+ 
 
   return (
     <div className="flex min-h-screen bg-valion-bg">
@@ -295,9 +295,10 @@ export default function PedidosClient({
                   <option key={e} value={e}>{e}</option>
                 ))}
               </select>
-            </div>
+                        </div>
 
-                          <button
+            <div className="mt-6 flex gap-2">
+              <button
                 onClick={generarFacturaPDF}
                 className="flex-1 rounded-md border border-valion-navy py-2 text-sm font-medium text-valion-navy hover:bg-valion-navy hover:text-white"
               >
