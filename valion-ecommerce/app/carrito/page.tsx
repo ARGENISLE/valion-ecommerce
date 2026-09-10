@@ -196,26 +196,3 @@ export default function Carrito() {
   );
 }
 
-const CUPON_KEY = "valion_cupon_aplicado";
-
-export type CuponAplicado = {
-  codigo: string;
-  tipo: string;
-  valor: string;
-  descuentoPorcentaje: number;
-  envioGratis: boolean;
-};
-
-export function guardarCuponAplicado(cupon: CuponAplicado) {
-  localStorage.setItem(CUPON_KEY, JSON.stringify(cupon));
-}
-
-export function obtenerCuponAplicado(): CuponAplicado | null {
-  if (typeof window === "undefined") return null;
-  const data = localStorage.getItem(CUPON_KEY);
-  return data ? JSON.parse(data) : null;
-}
-
-export function quitarCuponAplicado() {
-  localStorage.removeItem(CUPON_KEY);
-}
