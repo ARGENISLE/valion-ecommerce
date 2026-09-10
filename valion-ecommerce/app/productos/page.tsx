@@ -1,5 +1,6 @@
 import { supabase, Producto } from "@/lib/supabase";
 import ProductosGrid from "./ProductosGrid";
+import ContadorCarrito from "./ContadorCarrito";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function Productos() {
             placeholder="Buscar productos..."
             className="hidden w-80 rounded-md px-3 py-2 text-sm text-valion-ink sm:block"
           />
-          <button className="btn-cta text-sm">Carrito (0)</button>
+                    <ContadorCarrito />
         </div>
       </header>
 
