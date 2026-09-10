@@ -11,9 +11,35 @@ export default function FichaProductoClient({
   producto: Producto;
   relacionados: Producto[];
 }) {
-    const [cantidad, setCantidad] = useState(1);
+      const [cantidad, setCantidad] = useState(1);
   const [mensaje, setMensaje] = useState("");
   const [totalCarrito, setTotalCarrito] = useState(0);
+  const [tallaSeleccionada, setTallaSeleccionada] = useState<string | null>(null);
+  const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(null);
+  const [errorVariacion, setErrorVariacion] = useState("");
+
+  const tieneTallas = !!producto.variaciones?.tallas?.length;
+  const tieneColores = !!producto.variaciones?.colores?.length;
+
+  function obtenerVariacionTexto(): string | undefined {
+    const partes = [];
+    if (tallaSeleccionada) partes.push(`Talla: ${tallaSeleccionada}`);
+    if (colorSeleccionado) partes.push(`Color: ${colorSeleccionado}`);
+    return partes.length > 0 ? partes.join(" / ") : undefined;
+  }
+
+  function variacionValida(): boolean {
+    if (tieneTallas && !tallaSeleccionada) {
+      setErrorVariacion("Selecciona una talla.");
+      return false;
+    }
+    if (tieneColores && !colorSeleccionado) {
+      setErrorVariacion("Selecciona un color.");
+      return false;
+    }
+    setErrorVariacion("");
+    return true;
+  }
 
   useEffect(() => {
     function actualizarContador() {
@@ -27,9 +53,10 @@ export default function FichaProductoClient({
 
   const precioFinal = producto.precio_oferta ?? producto.precio;
 
-  function handleAgregar() {
+    function handleAgregar() {
+    if (!variacionValida()) return;
     agregarAlCarrito(
-      { id: producto.id, nombre: producto.nombre, precio: precioFinal },
+      { id: producto.id, nombre: producto.nombre, precio: precioFinal, variacion: obtenerVariacionTexto() },
       cantidad
     );
     setMensaje("¡Producto agregado al carrito!");
@@ -37,13 +64,13 @@ export default function FichaProductoClient({
   }
 
   function handleComprarAhora() {
+    if (!variacionValida()) return;
     agregarAlCarrito(
-      { id: producto.id, nombre: producto.nombre, precio: precioFinal },
+      { id: producto.id, nombre: producto.nombre, precio: precioFinal, variacion: obtenerVariacionTexto() },
       cantidad
     );
     window.location.href = "/carrito";
   }
-
   return (
     <main className="min-h-screen bg-valion-bg">
       <header className="bg-valion-navy text-white">
@@ -101,9 +128,55 @@ export default function FichaProductoClient({
               )}
             </div>
 
-            <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                        <p className="mt-4 text-sm leading-relaxed text-slate-600">
               {producto.descripcion}
             </p>
+
+            {tieneTallas && (
+              <div className="mt-4">
+                <span className="text-sm font-medium text-valion-ink">Talla</span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {producto.variaciones!.tallas!.map((talla) => (
+                    <button
+                      key={talla}
+                      onClick={() => setTallaSeleccionada(talla)}
+                      className={`rounded-md border px-3 py-1.5 text-sm ${
+                        tallaSeleccionada === talla
+                          ? "border-valion-orange bg-valion-orange/10 font-bold text-valion-orange"
+                          : "border-slate-300 text-slate-600"
+                      }`}
+                    >
+                      {talla}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tieneColores && (
+              <div className="mt-4">
+                <span className="text-sm font-medium text-valion-ink">Color</span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {producto.variaciones!.colores!.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setColorSeleccionado(color)}
+                      className={`rounded-md border px-3 py-1.5 text-sm ${
+                        colorSeleccionado === color
+                          ? "border-valion-orange bg-valion-orange/10 font-bold text-valion-orange"
+                          : "border-slate-300 text-slate-600"
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {errorVariacion && (
+              <p className="mt-2 text-xs text-red-500">{errorVariacion}</p>
+            )}
 
             <div className="mt-6 flex items-center gap-3">
               <div className="flex items-center rounded-md border border-slate-300">
