@@ -1,17 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   ItemCarrito,
   obtenerCarrito,
   actualizarCantidad,
   eliminarDelCarrito,
+  guardarCuponAplicado,
+  obtenerCuponAplicado,
+  quitarCuponAplicado,
 } from "@/lib/cart";
 
 export default function Carrito() {
   const [items, setItems] = useState<ItemCarrito[]>([]);
   const [cupon, setCupon] = useState("");
-  const [descuentoAplicado, setDescuentoAplicado] = useState(0);
+    const [descuentoAplicado, setDescuentoAplicado] = useState(0);
+  const [envioGratisCupon, setEnvioGratisCupon] = useState(false);
   const [mensajeCupon, setMensajeCupon] = useState("");
 
   useEffect(() => {
@@ -33,19 +38,57 @@ export default function Carrito() {
     eliminarDelCarrito(id);
   }
 
-  function aplicarCupon() {
-    if (cupon.trim().toUpperCase() === "VALION10") {
-      setDescuentoAplicado(0.1);
-      setMensajeCupon("¡Cupón aplicado! 10% de descuento.");
-    } else {
+   async function aplicarCupon() {
+    const codigo = cupon.trim().toUpperCase();
+    if (!codigo) return;
+
+    const { data, error } = await supabase
+      .from("cupones")
+      .select("*")
+      .eq("codigo", codigo)
+      .eq("activo", true)
+      .maybeSingle();
+
+    if (error || !data) {
       setDescuentoAplicado(0);
+      setEnvioGratisCupon(false);
+      quitarCuponAplicado();
       setMensajeCupon("Cupón no válido.");
+      return;
     }
+
+    if (data.usos >= data.limite_usos) {
+      setDescuentoAplicado(0);
+      setEnvioGratisCupon(false);
+      quitarCuponAplicado();
+      setMensajeCupon("Este cupón ya alcanzó su límite de usos.");
+      return;
+    }
+
+    let porcentaje = 0;
+    let envioGratis = false;
+
+    if (data.tipo === "Porcentaje") {
+      porcentaje = parseFloat(data.valor.replace("%", "")) / 100;
+    } else if (data.tipo === "Envío gratis") {
+      envioGratis = true;
+    }
+
+    setDescuentoAplicado(porcentaje);
+    setEnvioGratisCupon(envioGratis);
+    guardarCuponAplicado({
+      codigo: data.codigo,
+      tipo: data.tipo,
+      valor: data.valor,
+      descuentoPorcentaje: porcentaje,
+      envioGratis,
+    });
+    setMensajeCupon(`¡Cupón aplicado! ${data.tipo === "Envío gratis" ? "Envío gratis" : data.valor + " de descuento"}.`);
   }
 
   const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   const descuento = subtotal * descuentoAplicado;
-  const envio = subtotal > 50 ? 0 : 5.99;
+    const envio = subtotal > 50 || envioGratisCupon ? 0 : 5.99;
   const total = subtotal - descuento + (items.length > 0 ? envio : 0);
 
   function irAlCheckout() {
