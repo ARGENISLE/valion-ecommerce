@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Producto } from "@/lib/supabase";
-import { agregarAlCarrito } from "@/lib/cart";
+import { agregarAlCarrito, obtenerCarrito } from "@/lib/cart";
 
 export default function FichaProductoClient({
   producto,
@@ -11,8 +11,19 @@ export default function FichaProductoClient({
   producto: Producto;
   relacionados: Producto[];
 }) {
-  const [cantidad, setCantidad] = useState(1);
+    const [cantidad, setCantidad] = useState(1);
   const [mensaje, setMensaje] = useState("");
+  const [totalCarrito, setTotalCarrito] = useState(0);
+
+  useEffect(() => {
+    function actualizarContador() {
+      const items = obtenerCarrito();
+      setTotalCarrito(items.reduce((acc, i) => acc + i.cantidad, 0));
+    }
+    actualizarContador();
+    window.addEventListener("carrito-actualizado", actualizarContador);
+    return () => window.removeEventListener("carrito-actualizado", actualizarContador);
+  }, []);
 
   const precioFinal = producto.precio_oferta ?? producto.precio;
 
@@ -45,7 +56,7 @@ export default function FichaProductoClient({
             placeholder="Buscar productos..."
             className="hidden w-80 rounded-md px-3 py-2 text-sm text-valion-ink sm:block"
           />
-          <a href="/carrito" className="btn-cta text-sm">Ver carrito</a>
+                    <a href="/carrito" className="btn-cta text-sm">Carrito ({totalCarrito})</a>
         </div>
       </header>
 
