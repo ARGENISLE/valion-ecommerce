@@ -3,6 +3,7 @@ export type ItemCarrito = {
   nombre: string;
   precio: number;
   cantidad: number;
+  variacion?: string;
 };
 
 const CART_KEY = "valion_carrito";
@@ -18,9 +19,9 @@ function guardarCarrito(items: ItemCarrito[]) {
   window.dispatchEvent(new Event("carrito-actualizado"));
 }
 
-export function agregarAlCarrito(producto: { id: number; nombre: string; precio: number }, cantidad: number = 1) {
+export function agregarAlCarrito(producto: { id: number; nombre: string; precio: number; variacion?: string }, cantidad: number = 1) {
   const items = obtenerCarrito();
-  const existente = items.find((i) => i.id === producto.id);
+  const existente = items.find((i) => i.id === producto.id && i.variacion === producto.variacion);
   if (existente) {
     existente.cantidad += cantidad;
   } else {
