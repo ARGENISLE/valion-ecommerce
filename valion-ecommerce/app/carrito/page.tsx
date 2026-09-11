@@ -15,7 +15,7 @@ import {
 export default function Carrito() {
   const [items, setItems] = useState<ItemCarrito[]>([]);
   const [cupon, setCupon] = useState("");
-    const [descuentoAplicado, setDescuentoAplicado] = useState(0);
+  const [descuentoAplicado, setDescuentoAplicado] = useState(0);
   const [envioGratisCupon, setEnvioGratisCupon] = useState(false);
   const [mensajeCupon, setMensajeCupon] = useState("");
 
@@ -28,7 +28,7 @@ export default function Carrito() {
     return () => window.removeEventListener("carrito-actualizado", cargar);
   }, []);
 
-    function cambiarCantidad(id: number, delta: number, variacion?: string) {
+  function cambiarCantidad(id: number, delta: number, variacion?: string) {
     const item = items.find((i) => i.id === id && i.variacion === variacion);
     if (!item) return;
     actualizarCantidad(id, Math.max(1, item.cantidad + delta), variacion);
@@ -38,7 +38,7 @@ export default function Carrito() {
     eliminarDelCarrito(id, variacion);
   }
 
-   async function aplicarCupon() {
+  async function aplicarCupon() {
     const codigo = cupon.trim().toUpperCase();
     if (!codigo) return;
 
@@ -88,7 +88,7 @@ export default function Carrito() {
 
   const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   const descuento = subtotal * descuentoAplicado;
-    const envio = subtotal > 50 || envioGratisCupon ? 0 : 5.99;
+  const envio = subtotal > 50 || envioGratisCupon ? 0 : 5.99;
   const total = subtotal - descuento + (items.length > 0 ? envio : 0);
 
   function irAlCheckout() {
@@ -113,7 +113,18 @@ export default function Carrito() {
           Tu carrito
         </h1>
 
-                        {items.map((item) => (
+        {items.length === 0 ? (
+          <div className="mt-10 rounded-lg border border-slate-200 bg-white p-10 text-center text-slate-500">
+            Tu carrito está vacío.{" "}
+            <a href="/productos" className="text-valion-orange hover:underline">
+              Explorar productos
+            </a>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="md:col-span-2">
+              <div className="flex flex-col gap-4">
+                {items.map((item) => (
                   <div
                     key={`${item.id}-${item.variacion ?? "base"}`}
                     className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4"
@@ -154,8 +165,8 @@ export default function Carrito() {
                       Eliminar
                     </button>
                   </div>
-                ))}              
-            </div>
+                ))}
+              </div>
             </div>
 
             <div>
@@ -230,4 +241,3 @@ export default function Carrito() {
     </main>
   );
 }
-
