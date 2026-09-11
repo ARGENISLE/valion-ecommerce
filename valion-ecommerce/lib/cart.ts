@@ -1,3 +1,4 @@
+import { supabase } from "@/lib/supabase";
 export type ItemCarrito = {
   id: number;
   nombre: string;
@@ -67,4 +68,57 @@ export function obtenerCuponAplicado(): CuponAplicado | null {
 
 export function quitarCuponAplicado() {
   localStorage.removeItem(CUPON_KEY);
+}
+const EMAIL_KEY = "valion_email_carrito";
+
+export function guardarEmailCarrito(email: string) {
+  localStorage.setItem(EMAIL_KEY, email);
+}
+
+export function obtenerEmailCarrito(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(EMAIL_KEY);
+}
+
+export function quitarEmailCarrito() {
+  localStorage.removeItem(EMAIL_KEY);
+}
+
+export async function sincronizarCarritoAbandonado(nombre?: string) {
+  const email = obtenerEmailCarrito();
+  if (!email) return;
+
+  const items = obtenerCarrito();
+  const total = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+
+  if (items.length === 0) return;
+
+  const { data: existente } = await supabase
+    .from("carritos_abandonados")
+    .select("id")
+    .eq("email", email)
+    .eq("estado", "activo")
+    .maybeSingle();
+
+  if (existente) {
+    await supabase
+      .from("carritos_abandonados")
+      .update({ items, total, nombre, actualizado_en: new Date().toISOString() })
+      .eq("id", existente.id);
+  } else {
+    await supabase
+      .from("carritos_abandonados")
+      .insert({ email, nombre, items, total, estado: "activo" });
+  }
+}
+
+export async function marcarCarritoRecuperado() {
+  const email = obtenerEmailCarrito();
+  if (!email) return;
+
+  await supabase
+    .from("carritos_abandonados")
+    .update({ estado: "recuperado", actualizado_en: new Date().toISOString() })
+    .eq("email", email)
+    .eq("estado", "activo");
 }
