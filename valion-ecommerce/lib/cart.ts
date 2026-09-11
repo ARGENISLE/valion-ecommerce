@@ -30,15 +30,14 @@ export function agregarAlCarrito(producto: { id: number; nombre: string; precio:
   guardarCarrito(items);
 }
 
-export function actualizarCantidad(id: number, cantidad: number) {
+export function actualizarCantidad(id: number, cantidad: number, variacion?: string) {
   const items = obtenerCarrito()
-    .map((i) => (i.id === id ? { ...i, cantidad } : i))
+    .map((i) => (i.id === id && i.variacion === variacion ? { ...i, cantidad } : i))
     .filter((i) => i.cantidad > 0);
   guardarCarrito(items);
 }
-
-export function eliminarDelCarrito(id: number) {
-  const items = obtenerCarrito().filter((i) => i.id !== id);
+export function eliminarDelCarrito(id: number, variacion?: string) {
+  const items = obtenerCarrito().filter((i) => !(i.id === id && i.variacion === variacion));
   guardarCarrito(items);
 }
 
