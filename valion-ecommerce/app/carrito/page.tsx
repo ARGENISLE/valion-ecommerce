@@ -28,14 +28,14 @@ export default function Carrito() {
     return () => window.removeEventListener("carrito-actualizado", cargar);
   }, []);
 
-  function cambiarCantidad(id: number, delta: number) {
-    const item = items.find((i) => i.id === id);
+    function cambiarCantidad(id: number, delta: number, variacion?: string) {
+    const item = items.find((i) => i.id === id && i.variacion === variacion);
     if (!item) return;
-    actualizarCantidad(id, Math.max(1, item.cantidad + delta));
+    actualizarCantidad(id, Math.max(1, item.cantidad + delta), variacion);
   }
 
-  function eliminarItem(id: number) {
-    eliminarDelCarrito(id);
+  function eliminarItem(id: number, variacion?: string) {
+    eliminarDelCarrito(id, variacion);
   }
 
    async function aplicarCupon() {
@@ -113,20 +113,9 @@ export default function Carrito() {
           Tu carrito
         </h1>
 
-        {items.length === 0 ? (
-          <div className="mt-10 rounded-lg border border-slate-200 bg-white p-10 text-center text-slate-500">
-            Tu carrito está vacío.{" "}
-            <a href="/productos" className="text-valion-orange hover:underline">
-              Explorar productos
-            </a>
-          </div>
-        ) : (
-          <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
-            <div className="md:col-span-2">
-              <div className="flex flex-col gap-4">
-                {items.map((item) => (
+                        {items.map((item) => (
                   <div
-                    key={item.id}
+                    key={`${item.id}-${item.variacion ?? "base"}`}
                     className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4"
                   >
                     <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded bg-valion-bg">
@@ -136,34 +125,37 @@ export default function Carrito() {
                       <span className="text-sm font-medium text-valion-ink">
                         {item.nombre}
                       </span>
+                      {item.variacion && (
+                        <div className="text-xs text-slate-400">{item.variacion}</div>
+                      )}
                       <div className="mt-1 font-display text-lg font-extrabold text-valion-orange">
                         ${item.precio.toFixed(2)}
                       </div>
                     </div>
                     <div className="flex items-center rounded-md border border-slate-300">
                       <button
-                        onClick={() => cambiarCantidad(item.id, -1)}
+                        onClick={() => cambiarCantidad(item.id, -1, item.variacion)}
                         className="px-3 py-1.5 text-slate-500 hover:text-valion-orange"
                       >
                         -
                       </button>
                       <span className="px-3 text-sm">{item.cantidad}</span>
                       <button
-                        onClick={() => cambiarCantidad(item.id, 1)}
+                        onClick={() => cambiarCantidad(item.id, 1, item.variacion)}
                         className="px-3 py-1.5 text-slate-500 hover:text-valion-orange"
                       >
                         +
                       </button>
                     </div>
                     <button
-                      onClick={() => eliminarItem(item.id)}
+                      onClick={() => eliminarItem(item.id, item.variacion)}
                       className="ml-2 text-sm text-slate-400 hover:text-red-500"
                     >
                       Eliminar
                     </button>
                   </div>
-                ))}
-              </div>
+                ))}              
+            </div>
             </div>
 
             <div>
