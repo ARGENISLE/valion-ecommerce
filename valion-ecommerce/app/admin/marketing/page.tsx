@@ -14,6 +14,17 @@ export type Cupon = {
   activo: boolean;
 };
 
+export type CarritoAbandonado = {
+  id: number;
+  email: string;
+  nombre: string | null;
+  items: { nombre: string; cantidad: number }[];
+  total: number;
+  estado: string;
+  actualizado_en: string;
+  recordatorio_enviado: boolean;
+};
+
 async function obtenerCupones(): Promise<Cupon[]> {
   const { data, error } = await supabase
     .from("cupones")
@@ -26,7 +37,21 @@ async function obtenerCupones(): Promise<Cupon[]> {
   return data ?? [];
 }
 
+async function obtenerCarritosAbandonados(): Promise<CarritoAbandonado[]> {
+  const { data, error } = await supabase
+    .from("carritos_abandonados")
+    .select("*")
+    .eq("estado", "activo")
+    .order("actualizado_en", { ascending: false });
+  if (error) {
+    console.error("Error cargando carritos abandonados:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
 export default async function AdminMarketingPage() {
   const cupones = await obtenerCupones();
-  return <MarketingClient cuponesIniciales={cupones} />;
+  const carritos = await obtenerCarritosAbandonados();
+  return <MarketingClient cuponesIniciales={cupones} carritosIniciales={carritos} />;
 }
