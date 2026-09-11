@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ItemCarrito, obtenerCarrito, vaciarCarrito, obtenerCuponAplicado, quitarCuponAplicado, CuponAplicado } from "@/lib/cart";
+import { ItemCarrito, obtenerCarrito, vaciarCarrito, obtenerCuponAplicado, quitarCuponAplicado, CuponAplicado, guardarEmailCarrito, sincronizarCarritoAbandonado, marcarCarritoRecuperado } from "@/lib/cart";
 
 const pasos = ["Envío", "Pago", "Confirmación"];
 
@@ -33,12 +33,14 @@ export default function Checkout() {
   const envio: number = cupon?.envioGratis ? 0 : envioBase;
   const total = Math.max(0, subtotal - descuento + envio);
 
-  function siguientePaso() {
+    function siguientePaso() {
     if (pasoActual === 0) {
       if (!nombre || !email || !direccion || !telefono) {
         setError("Por favor completa todos los campos obligatorios.");
         return;
       }
+      guardarEmailCarrito(email);
+      sincronizarCarritoAbandonado(nombre);
     }
     setError("");
     setPasoActual((p) => Math.min(p + 1, pasos.length - 1));
@@ -136,7 +138,8 @@ export default function Checkout() {
         }
       }
 
-           setNumeroPedido(`VAL-${pedido.id.toString().padStart(5, "0")}`);
+                setNumeroPedido(`VAL-${pedido.id.toString().padStart(5, "0")}`);
+      await marcarCarritoRecuperado();
       vaciarCarrito();
       quitarCuponAplicado();
       setProcesando(false);
