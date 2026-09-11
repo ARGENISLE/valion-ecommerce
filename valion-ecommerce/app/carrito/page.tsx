@@ -10,23 +10,45 @@ import {
   guardarCuponAplicado,
   obtenerCuponAplicado,
   quitarCuponAplicado,
+  guardarEmailCarrito,
+  obtenerEmailCarrito,
+  sincronizarCarritoAbandonado,
 } from "@/lib/cart";
-
 export default function Carrito() {
   const [items, setItems] = useState<ItemCarrito[]>([]);
   const [cupon, setCupon] = useState("");
   const [descuentoAplicado, setDescuentoAplicado] = useState(0);
   const [envioGratisCupon, setEnvioGratisCupon] = useState(false);
-  const [mensajeCupon, setMensajeCupon] = useState("");
-
-  useEffect(() => {
+    const [mensajeCupon, setMensajeCupon] = useState("");
+  const [emailCarrito, setEmailCarrito] = useState("");
+  const [emailGuardado, setEmailGuardado] = useState(false);
+    useEffect(() => {
     function cargar() {
       setItems(obtenerCarrito());
     }
     cargar();
+    const emailPrevio = obtenerEmailCarrito();
+    if (emailPrevio) {
+      setEmailCarrito(emailPrevio);
+      setEmailGuardado(true);
+    }
     window.addEventListener("carrito-actualizado", cargar);
     return () => window.removeEventListener("carrito-actualizado", cargar);
   }, []);
+
+  useEffect(() => {
+    if (emailGuardado) {
+      sincronizarCarritoAbandonado();
+    }
+  }, [items, emailGuardado]);
+
+  function handleGuardarEmail() {
+    const email = emailCarrito.trim();
+    if (!email || !email.includes("@")) return;
+    guardarEmailCarrito(email);
+    setEmailGuardado(true);
+    sincronizarCarritoAbandonado();
+  }
 
   function cambiarCantidad(id: number, delta: number, variacion?: string) {
     const item = items.find((i) => i.id === id && i.variacion === variacion);
@@ -174,6 +196,24 @@ export default function Carrito() {
                 <h2 className="font-display text-lg font-bold text-valion-ink">
                   Resumen del pedido
                 </h2>
+
+                                {!emailGuardado && (
+                  <div className="mb-4 flex gap-2">
+                    <input
+                      type="email"
+                      placeholder="Tu email (para guardar tu carrito)"
+                      value={emailCarrito}
+                      onChange={(e) => setEmailCarrito(e.target.value)}
+                      className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={handleGuardarEmail}
+                      className="rounded-md border border-valion-navy px-3 py-2 text-sm font-medium text-valion-navy hover:bg-valion-navy hover:text-white"
+                    >
+                      Guardar
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-4 flex gap-2">
                   <input
