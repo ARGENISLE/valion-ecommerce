@@ -74,7 +74,7 @@ export default function MarketingClient({
       body: JSON.stringify({
         emailCliente: carrito.email,
         nombreCliente: carrito.nombre,
-        items: carrito.items,
+        items: carrito.items.map((i: any) => ({ nombre: i.nombre, cantidad: i.cantidad, precioUnitario: i.precio, })),
         total: carrito.total,
       }),
     });
