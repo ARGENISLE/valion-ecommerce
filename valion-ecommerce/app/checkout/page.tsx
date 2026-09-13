@@ -138,7 +138,25 @@ export default function Checkout() {
         }
       }
 
-                setNumeroPedido(`VAL-${pedido.id.toString().padStart(5, "0")}`);
+                                const numeroPedidoGenerado = `VAL-${pedido.id.toString().padStart(5, "0")}`;
+      setNumeroPedido(numeroPedidoGenerado);
+
+      fetch("/api/enviar-confirmacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailCliente: email,
+          nombreCliente: nombre,
+          numeroPedido: numeroPedidoGenerado,
+          items: items.map((item) => ({
+            nombre: item.nombre,
+            cantidad: item.cantidad,
+            precioUnitario: item.precio,
+          })),
+          total,
+        }),
+      }).catch((err) => console.error("Error enviando email de confirmación:", err));
+
       await marcarCarritoRecuperado();
       vaciarCarrito();
       quitarCuponAplicado();
