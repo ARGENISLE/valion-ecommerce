@@ -64,29 +64,34 @@ export default function MarketingClient({
   }
 
   async function enviarRecordatorio(id: number) {
-  const carrito = carritos.find((c) => c.id === id);
-  if (!carrito) return;
+    const carrito = carritos.find((c) => c.id === id);
+    if (!carrito) return;
 
-  try {
-    await fetch("/api/enviar-recordatorio", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        emailCliente: carrito.email,
-        nombreCliente: carrito.nombre,
-        items: carrito.items.map((i: any) => ({ nombre: i.nombre, cantidad: i.cantidad, precioUnitario: i.precio, })),
-        total: carrito.total,
-      }),
-    });
-  } catch (err) {
-    console.error("Error enviando recordatorio:", err);
+    try {
+      await fetch("/api/enviar-recordatorio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailCliente: carrito.email,
+          nombreCliente: carrito.nombre,
+          items: carrito.items.map((i: any) => ({
+            nombre: i.nombre,
+            cantidad: i.cantidad,
+            precioUnitario: i.precio,
+          })),
+          total: carrito.total,
+        }),
+      });
+    } catch (err) {
+      console.error("Error enviando recordatorio:", err);
+    }
+
+    setCarritos((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, recordatorio_enviado: true } : c))
+    );
+    await supabase.from("carritos_abandonados").update({ recordatorio_enviado: true }).eq("id", id);
   }
 
-  setCarritos((prev) =>
-    prev.map((c) => (c.id === id ? { ...c, recordatorio_enviado: true } : c))
-  );
-  await supabase.from("carritos_abandonados").update({ recordatorio_enviado: true }).eq("id", id);
-}
   return (
     <div className="flex min-h-screen bg-valion-bg">
       <aside className="hidden w-56 shrink-0 bg-valion-navy text-white md:block">
@@ -95,7 +100,7 @@ export default function MarketingClient({
         </div>
         <nav className="mt-4 flex flex-col gap-1 px-3">
           {menuAdmin.map((item) => (
-            <a
+            
               key={item.nombre}
               href={item.href}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${
