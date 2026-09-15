@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ItemCarrito, obtenerCarrito, vaciarCarrito, obtenerCuponAplicado, quitarCuponAplicado, CuponAplicado, guardarEmailCarrito, sincronizarCarritoAbandonado, marcarCarritoRecuperado } from "@/lib/cart";
+
 declare global {
   interface Window {
     paypal?: any;
   }
 }
+
 const pasos = ["Envío", "Pago", "Confirmación"];
 
 export default function Checkout() {
@@ -26,7 +28,7 @@ export default function Checkout() {
   const [codigoPostal, setCodigoPostal] = useState("");
   const [telefono, setTelefono] = useState("");
 
-        useEffect(() => {
+    useEffect(() => {
     setItems(obtenerCarrito());
     setCupon(obtenerCuponAplicado());
   }, []);
@@ -39,8 +41,14 @@ export default function Checkout() {
     document.body.appendChild(script);
   }, []);
 
+    const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  const descuento = cupon ? subtotal * (cupon.descuentoPorcentaje / 100) : 0;
+  const envioBase: number = subtotal > 50 || subtotal === 0 ? 0 : 5.99;
+  const envio: number = cupon?.envioGratis ? 0 : envioBase;
+  const total = Math.max(0, subtotal - descuento + envio);
+
   useEffect(() => {
-    if (metodoPago !== "paypal" || !items.length) return;
+    if (metodoPago !== "paypal" || pasoActual !== 1 || !items.length) return;
     const intervalo = setInterval(() => {
       if (window.paypal) {
         clearInterval(intervalo);
@@ -79,12 +87,6 @@ export default function Checkout() {
     }, 300);
     return () => clearInterval(intervalo);
   }, [metodoPago, pasoActual, total]);
-
-    const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
-  const descuento = cupon ? subtotal * (cupon.descuentoPorcentaje / 100) : 0;
-  const envioBase: number = subtotal > 50 || subtotal === 0 ? 0 : 5.99;
-  const envio: number = cupon?.envioGratis ? 0 : envioBase;
-  const total = Math.max(0, subtotal - descuento + envio);
 
     function siguientePaso() {
     if (pasoActual === 0) {
@@ -191,7 +193,7 @@ export default function Checkout() {
         }
       }
 
-                                const numeroPedidoGenerado = `VAL-${pedido.id.toString().padStart(5, "0")}`;
+                const numeroPedidoGenerado = `VAL-${pedido.id.toString().padStart(5, "0")}`;
       setNumeroPedido(numeroPedidoGenerado);
 
       fetch("/api/enviar-confirmacion", {
@@ -377,6 +379,13 @@ export default function Checkout() {
                       />
                     </div>
                   )}
+
+                  {metodoPago === "paypal" && (
+                    <div className="mt-4">
+                      <div id="paypal-button-container" />
+                    </div>
+                  )}
+
                   {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
                 </>
               )}
@@ -411,13 +420,15 @@ export default function Checkout() {
                   ) : (
                     <span />
                   )}
-                  <button
-                    onClick={pasoActual === 1 ? confirmarPedido : siguientePaso}
-                    disabled={procesando}
-                    className="btn-cta text-sm disabled:opacity-50"
-                  >
-                    {procesando ? "Procesando..." : pasoActual === 1 ? "Confirmar pedido" : "Continuar"}
-                  </button>
+                  {!(pasoActual === 1 && metodoPago === "paypal") && (
+                    <button
+                      onClick={pasoActual === 1 ? confirmarPedido : siguientePaso}
+                      disabled={procesando}
+                      className="btn-cta text-sm disabled:opacity-50"
+                    >
+                      {procesando ? "Procesando..." : pasoActual === 1 ? "Confirmar pedido" : "Continuar"}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
