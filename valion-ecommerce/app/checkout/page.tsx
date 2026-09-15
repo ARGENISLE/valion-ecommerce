@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ItemCarrito, obtenerCarrito, vaciarCarrito, obtenerCuponAplicado, quitarCuponAplicado, CuponAplicado, guardarEmailCarrito, sincronizarCarritoAbandonado, marcarCarritoRecuperado } from "@/lib/cart";
-
+declare global {
+  interface Window {
+    paypal?: any;
+  }
+}
 const pasos = ["Envío", "Pago", "Confirmación"];
 
 export default function Checkout() {
@@ -22,10 +26,59 @@ export default function Checkout() {
   const [codigoPostal, setCodigoPostal] = useState("");
   const [telefono, setTelefono] = useState("");
 
-    useEffect(() => {
+        useEffect(() => {
     setItems(obtenerCarrito());
     setCupon(obtenerCuponAplicado());
   }, []);
+
+  useEffect(() => {
+    if (document.getElementById("paypal-sdk")) return;
+    const script = document.createElement("script");
+    script.id = "paypal-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`;
+    document.body.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    if (metodoPago !== "paypal" || !items.length) return;
+    const intervalo = setInterval(() => {
+      if (window.paypal) {
+        clearInterval(intervalo);
+        const contenedor = document.getElementById("paypal-button-container");
+        if (contenedor) contenedor.innerHTML = "";
+        window.paypal
+          .Buttons({
+            createOrder: async () => {
+              const res = await fetch("/api/paypal/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ total }),
+              });
+              const data = await res.json();
+              return data.id;
+            },
+            onApprove: async (data: any) => {
+              const res = await fetch("/api/paypal/capture-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderID: data.orderID }),
+              });
+              const captura = await res.json();
+              if (captura.status === "COMPLETED") {
+                await confirmarPedido();
+              } else {
+                setError("El pago con PayPal no se pudo confirmar.");
+              }
+            },
+            onError: () => {
+              setError("Ocurrió un error con PayPal. Intenta de nuevo.");
+            },
+          })
+          .render("#paypal-button-container");
+      }
+    }, 300);
+    return () => clearInterval(intervalo);
+  }, [metodoPago, pasoActual, total]);
 
     const subtotal = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   const descuento = cupon ? subtotal * (cupon.descuentoPorcentaje / 100) : 0;
