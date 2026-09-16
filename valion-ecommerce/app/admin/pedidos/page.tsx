@@ -7,6 +7,7 @@ export type PedidoConCliente = {
   id: number;
   total: number;
   metodo_pago: string;
+    referencia_pago: string | null;
   estado: string;
   creado_en: string;
   clientes: { nombre: string; email: string } | null;
@@ -15,7 +16,7 @@ export type PedidoConCliente = {
 async function obtenerPedidos(): Promise<PedidoConCliente[]> {
   const { data, error } = await supabase
     .from("pedidos")
-    .select("id, total, metodo_pago, estado, creado_en, clientes(nombre, email)")
+        .select("id, total, metodo_pago, estado, creado_en, referencia_pago, clientes(nombre, email)")
     .order("creado_en", { ascending: false });
   if (error) {
     console.error("Error cargando pedidos:", error.message);
