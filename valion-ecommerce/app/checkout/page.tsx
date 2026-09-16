@@ -27,7 +27,7 @@ export default function Checkout() {
   const [ciudad, setCiudad] = useState("");
   const [codigoPostal, setCodigoPostal] = useState("");
   const [telefono, setTelefono] = useState("");
-
+  const [referenciaPago, setReferenciaPago] = useState("");
     useEffect(() => {
     setItems(obtenerCarrito());
     setCupon(obtenerCuponAplicado());
@@ -385,7 +385,26 @@ export default function Checkout() {
                       <div id="paypal-button-container" />
                     </div>
                   )}
-
+                  {metodoPago === "movil" && (
+                    <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      <p className="font-semibold text-valion-ink">Datos para tu Pago Móvil:</p>
+                      <div className="mt-2 space-y-1">
+                        <p>Nombre: Argenis León</p>
+                        <p>C.I.: V-6.267.038</p>
+                        <p>Teléfono: 0414 116 68 98</p>
+                        <p>Banco: Banesco (Código 0134)</p>
+                        <p className="mt-2 font-semibold text-valion-orange">
+                          Monto a pagar: ${total.toFixed(2)}
+                        </p>
+                      </div>
+                      <input
+                        placeholder="Número de referencia de tu pago"
+                        value={referenciaPago}
+                        onChange={(e) => setReferenciaPago(e.target.value)}
+                        className="mt-3 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+                  )}
                   {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
                 </>
               )}
