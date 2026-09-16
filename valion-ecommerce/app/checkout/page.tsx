@@ -105,8 +105,12 @@ export default function Checkout() {
     setPasoActual((p) => Math.max(p - 1, 0));
   }
 
-  async function confirmarPedido() {
+    async function confirmarPedido() {
     setError("");
+    if (metodoPago === "movil" && !referenciaPago.trim()) {
+      setError("Por favor ingresa el número de referencia de tu pago.");
+      return;
+    }
     setProcesando(true);
     try {
       let clienteId: number;
@@ -142,13 +146,14 @@ export default function Checkout() {
         clienteId = nuevoCliente.id;
       }
 
-            const { data: pedido, error: errorPedido } = await supabase
+                        const { data: pedido, error: errorPedido } = await supabase
         .from("pedidos")
         .insert({
           cliente_id: clienteId,
           total: total,
           metodo_pago: metodoPago,
-          estado: "Pendiente",
+          estado: metodoPago === "movil" ? "Pendiente de verificación" : "Pendiente",
+          referencia_pago: metodoPago === "movil" ? referenciaPago : null,
         })
         .select("id")
         .single();
