@@ -5,10 +5,11 @@ import { supabase } from "@/lib/supabase";
 import BotonCerrarSesion from "../BotonCerrarSesion";
 import { PedidoConCliente } from "./page";
 
-const estados = ["Pendiente", "Pagado", "En preparación", "Enviado", "Entregado", "Cancelado"];
+const estados = ["Pendiente", "Pendiente de verificación", "Pagado", "En preparación", "Enviado", "Entregado", "Cancelado"];
 
 const coloresEstado: Record<string, string> = {
   "Pendiente": "bg-slate-100 text-slate-600",
+  "Pendiente de verificación": "bg-orange-100 text-orange-700",
   "Pagado": "bg-blue-100 text-blue-700",
   "En preparación": "bg-amber-100 text-amber-700",
   "Enviado": "bg-purple-100 text-purple-700",
@@ -260,7 +261,10 @@ export default function PedidosClient({
               <div className="flex justify-between"><span>Cliente</span><span className="font-medium text-valion-ink">{pedidoSeleccionado.clientes?.nombre ?? "—"}</span></div>
               <div className="flex justify-between"><span>Correo</span><span>{pedidoSeleccionado.clientes?.email ?? "—"}</span></div>
               <div className="flex justify-between"><span>Fecha</span><span>{formatearFecha(pedidoSeleccionado.creado_en)}</span></div>
-              <div className="flex justify-between"><span>Método de pago</span><span className="capitalize">{pedidoSeleccionado.metodo_pago}</span></div>
+                            <div className="flex justify-between"><span>Método de pago</span><span className="capitalize">{pedidoSeleccionado.metodo_pago}</span></div>
+              {pedidoSeleccionado.metodo_pago === "movil" && pedidoSeleccionado.referencia_pago && (
+                <div className="flex justify-between"><span>Referencia de pago</span><span className="font-mono font-medium text-valion-ink">{pedidoSeleccionado.referencia_pago}</span></div>
+              )}
             </div>
 
             <div className="mt-4 border-t border-slate-100 pt-4">
