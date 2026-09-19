@@ -98,10 +98,13 @@ export default function FichaProductoClient({
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
           <div>
-            <div className="flex h-96 items-center justify-center rounded-lg border border-slate-200 bg-white">
-              <span className="text-8xl">📦</span>
+                       <div className="flex h-96 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+              {producto.imagen_url ? (
+                <img src={producto.imagen_url} alt={producto.nombre} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-8xl">📦</span>
+              )}
             </div>
-          </div>
 
           <div>
             <span className="text-xs uppercase tracking-wide text-slate-400">
@@ -225,6 +228,18 @@ export default function FichaProductoClient({
             <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
               🚚 Envío gratis en compras mayores a $50 · Entrega estimada 2-4 días hábiles
             </div>
+                        {producto.video_url && (
+              <div className="mt-6">
+                <span className="text-sm font-medium text-valion-ink">Video del producto</span>
+                <div className="mt-2 aspect-video overflow-hidden rounded-lg border border-slate-200">
+                  <iframe
+                    src={producto.video_url.replace("watch?v=", "embed/")}
+                    className="h-full w-full"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -240,8 +255,12 @@ export default function FichaProductoClient({
                   href={`/productos/${p.id}`}
                   className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
                 >
-                  <div className="mb-3 flex h-32 items-center justify-center rounded bg-white">
-                    <span className="text-4xl">📦</span>
+                                   <div className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded bg-white">
+                    {p.imagen_url ? (
+                      <img src={p.imagen_url} alt={p.nombre} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-4xl">📦</span>
+                    )}
                   </div>
                   <span className="text-sm font-medium text-valion-ink">{p.nombre}</span>
                   <span className="mt-2 font-display text-lg font-extrabold text-valion-ink">
