@@ -157,7 +157,7 @@ export default function InventarioClient({
         nombre: obj["nombre"] || "Sin nombre",
         sku: obj["sku"] || null,
         categoria: obj["categoria"] || "Otros",
-        precio: Number(obj["precio"]) || 0,
+                precio: parseFloat(String(obj["precio"] || "0").replace(/[^0-9,.-]/g, "").replace(",", ".")) || 0,
         stock: Number(obj["stock"]) || 0,
         descripcion: obj["descripcion"] || "",
         video_url: obj["video_url"] || null,
