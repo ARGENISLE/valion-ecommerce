@@ -282,6 +282,9 @@ export default function InventarioClient({
               onChange={(e) => setBusqueda(e.target.value)}
               className="w-64 rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
+                      {resultadoImport && (
+            <p className="mb-3 text-sm text-slate-600">{resultadoImport}</p>
+          )}
             <div className="flex gap-2">
               <button
                 onClick={() => setEditando({ ...productoVacio })}
@@ -289,9 +292,19 @@ export default function InventarioClient({
               >
                 + Agregar producto
               </button>
-              <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-valion-ink">
-                Importar CSV
-              </button>
+                            <label className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-valion-ink">
+                {importando ? "Importando..." : "Importar CSV"}
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  disabled={importando}
+                  onChange={(e) => {
+                    const archivo = e.target.files?.[0];
+                    if (archivo) importarCSV(archivo);
+                  }}
+                />
+              </label>
               <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-valion-ink">
                 Exportar CSV
               </button>
