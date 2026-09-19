@@ -165,18 +165,36 @@ export default function InventarioClient({
       };
     });
 
-    const { data, error } = await supabase
-      .from("productos")
-      .insert(productosNuevos)
-      .select();
+       let exitosos = 0;
+    const errores: string[] = [];
+    const insertados: Producto[] = [];
 
-    setImportando(false);
+    for (const prod of productosNuevos) {
+      const { data, error } = await supabase
+        .from("productos")
+        .insert(prod)
+        .select()
+        .single();
 
-    if (error) {
-      setResultadoImport("Error al importar: " + error.message);
-      return;
+      if (error) {
+        errores.push(`${prod.nombre} (${prod.sku}): ${error.message}`);
+      } else if (data) {
+        insertados.push(data as Producto);
+        exitosos++;
+      }
     }
 
+    setImportando(false);
+    setProductos((prev) => [...insertados, ...prev]);
+
+    if (errores.length > 0) {
+      setResultadoImport(
+        `Se importaron ${exitosos} de ${productosNuevos.length}. Errores: ${errores.slice(0, 5).join(" | ")}${errores.length > 5 ? ` y ${errores.length - 5} más...` : ""}`
+      );
+    } else {
+      setResultadoImport(`¡Listo! Se importaron ${exitosos} productos.`);
+    }
+  }
     setProductos((prev) => [...(data as Producto[]), ...prev]);
     setResultadoImport(`¡Listo! Se importaron ${data?.length ?? 0} productos.`);
   }
