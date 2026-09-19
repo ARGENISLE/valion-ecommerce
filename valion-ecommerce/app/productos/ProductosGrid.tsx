@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import { Producto } from "@/lib/supabase";
 import { agregarAlCarrito } from "@/lib/cart";
 
-const categorias = ["Todas", "Electrónica", "Hogar", "Moda", "Deportes", "Belleza"];
-
+const categorias = ["Todas", "Electrónicos", "Hogar", "Moda", "Deportes", "Belleza", "Juguetes", "Otros"];
 type RangoPrecio = "menos25" | "25a75" | "mas75";
 
 export default function ProductosGrid({ productos }: { productos: Producto[] }) {
