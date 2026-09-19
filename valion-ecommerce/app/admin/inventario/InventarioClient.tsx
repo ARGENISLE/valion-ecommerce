@@ -52,7 +52,8 @@ export default function InventarioClient({
   const [guardando, setGuardando] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
+  const [importando, setImportando] = useState(false);
+  const [resultadoImport, setResultadoImport] = useState("");
   const filtrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -91,7 +92,94 @@ export default function InventarioClient({
     setEditando((prev) => (prev ? { ...prev, imagen_url: data.publicUrl } : prev));
     setSubiendoImagen(false);
   }
+  function parsearCSV(texto: string): string[][] {
+    const filas: string[][] = [];
+    let fila: string[] = [];
+    let campo = "";
+    let dentroComillas = false;
 
+    for (let i = 0; i < texto.length; i++) {
+      const c = texto[i];
+      if (dentroComillas) {
+        if (c === '"' && texto[i + 1] === '"') {
+          campo += '"';
+          i++;
+        } else if (c === '"') {
+          dentroComillas = false;
+        } else {
+          campo += c;
+        }
+      } else {
+        if (c === '"') {
+          dentroComillas = true;
+        } else if (c === ",") {
+          fila.push(campo);
+          campo = "";
+        } else if (c === "\n" || c === "\r") {
+          if (c === "\r" && texto[i + 1] === "\n") i++;
+          fila.push(campo);
+          filas.push(fila);
+          fila = [];
+          campo = "";
+        } else {
+          campo += c;
+        }
+      }
+    }
+    if (campo || fila.length) {
+      fila.push(campo);
+      filas.push(fila);
+    }
+    return filas.filter((f) => f.some((c) => c.trim() !== ""));
+  }
+
+  async function importarCSV(archivo: File) {
+    setImportando(true);
+    setResultadoImport("");
+    const texto = await archivo.text();
+    const filas = parsearCSV(texto);
+
+    if (filas.length < 2) {
+      setResultadoImport("El archivo no tiene datos para importar.");
+      setImportando(false);
+      return;
+    }
+
+    const encabezados = filas[0].map((h) => h.trim().toLowerCase());
+    const filasDatos = filas.slice(1);
+
+    const productosNuevos = filasDatos.map((fila) => {
+      const obj: Record<string, string> = {};
+      encabezados.forEach((h, i) => {
+        obj[h] = (fila[i] ?? "").trim();
+      });
+      return {
+        nombre: obj["nombre"] || "Sin nombre",
+        sku: obj["sku"] || null,
+        categoria: obj["categoria"] || "Otros",
+        precio: Number(obj["precio"]) || 0,
+        stock: Number(obj["stock"]) || 0,
+        descripcion: obj["descripcion"] || "",
+        video_url: obj["video_url"] || null,
+        umbral_stock_bajo: 5,
+      };
+    });
+
+    const { data, error } = await supabase
+      .from("productos")
+      .insert(productosNuevos)
+      .select();
+
+    setImportando(false);
+
+    if (error) {
+      setResultadoImport("Error al importar: " + error.message);
+      return;
+    }
+
+    setProductos((prev) => [...(data as Producto[]), ...prev]);
+    setResultadoImport(`¡Listo! Se importaron ${data?.length ?? 0} productos.`);
+  }
   async function guardarEdicion() {
     if (!editando) return;
     if (!editando.nombre.trim()) {
