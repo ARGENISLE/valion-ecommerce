@@ -105,7 +105,7 @@ export default function FichaProductoClient({
                 <span className="text-8xl">📦</span>
               )}
             </div>
-
+</div>
           <div>
             <span className="text-xs uppercase tracking-wide text-slate-400">
               {producto.categoria}
