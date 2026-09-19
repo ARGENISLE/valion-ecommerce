@@ -140,8 +140,12 @@ export default function ProductosGrid({ productos }: { productos: Producto[] }) 
                 href={`/productos/${p.id}`}
                 className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
               >
-                <div className="mb-3 flex h-32 items-center justify-center rounded bg-white">
-                  <span className="text-4xl">📦</span>
+                                <div className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded bg-white">
+                  {p.imagen_url ? (
+                    <img src={p.imagen_url} alt={p.nombre} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-4xl">📦</span>
+                  )}
                 </div>
                 <span className="text-xs text-slate-400">{p.categoria}</span>
                 <span className="mt-1 text-sm font-medium text-valion-ink">
