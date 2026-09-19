@@ -12,7 +12,7 @@ const menuAdmin = [
   { nombre: "Reportes", href: "/admin/reportes", icono: "📈" },
 ];
 
-const categoriasDisponibles = ["Electrónicos", "Hogar", "Moda", "Deportes", "Belleza", "Juguetes", "Otros"];
+const categoriasDisponibles = ["Electrónicos", "Hogar", "Moda", "Deportes", "Belleza", "Juguetes", "Oficina y Papelería", "Mascotas", "Herramientas y Mejoras del Hogar", "Salud y Hogar", "Jardín y Exteriores", "Otros"];
 
 type ProductoFormulario = {
   id?: number;
