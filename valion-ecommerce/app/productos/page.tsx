@@ -1,8 +1,15 @@
 import { supabase, Producto } from "@/lib/supabase";
 import ProductosGrid from "./ProductosGrid";
 import ContadorCarrito from "./ContadorCarrito";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Todos los productos",
+  description:
+    "Explora el catálogo completo de VALION: electrónicos, hogar, moda, deportes, belleza y mucho más, con envíos rápidos y compra segura.",
+};
 
 async function obtenerProductos(): Promise<Producto[]> {
   const { data, error } = await supabase
