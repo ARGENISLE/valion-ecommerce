@@ -16,9 +16,25 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "VALION — Todo lo que buscas, en un solo lugar",
+  metadataBase: new URL("https://valion-ecommerce.vercel.app"),
+  title: {
+    default: "VALION — Todo lo que buscas, en un solo lugar",
+    template: "%s | VALION",
+  },
   description:
     "VALION es tu tienda en línea para encontrar todo tipo de productos, con envíos rápidos y compra segura.",
+  openGraph: {
+    title: "VALION — Todo lo que buscas, en un solo lugar",
+    description:
+      "VALION es tu tienda en línea para encontrar todo tipo de productos, con envíos rápidos y compra segura.",
+    siteName: "VALION",
+    locale: "es_VE",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
