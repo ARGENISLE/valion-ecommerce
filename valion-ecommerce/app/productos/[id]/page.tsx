@@ -1,5 +1,6 @@
-import { supabase, Producto } from "@/lib/supabase";
+ import { supabase, Producto } from "@/lib/supabase";
 import FichaProductoClient from "./FichaProductoClient";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,29 @@ async function obtenerRelacionados(categoria: string, idActual: number): Promise
   return data ?? [];
 }
 
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const producto = await obtenerProducto(params.id);
+
+  if (!producto) {
+    return { title: "Producto no encontrado" };
+  }
+
+  const descripcionCorta = producto.descripcion
+    ? producto.descripcion.slice(0, 155)
+    : `Compra ${producto.nombre} en VALION al mejor precio.`;
+
+  return {
+    title: producto.nombre,
+    description: descripcionCorta,
+    openGraph: {
+      title: producto.nombre,
+      description: descripcionCorta,
+      images: producto.imagen_url ? [{ url: producto.imagen_url }] : undefined,
+      type: "website",
+    },
+  };
+}
+
 export default async function FichaProducto({ params }: { params: { id: string } }) {
   const producto = await obtenerProducto(params.id);
 
@@ -40,5 +64,33 @@ export default async function FichaProducto({ params }: { params: { id: string }
 
   const relacionados = await obtenerRelacionados(producto.categoria, producto.id);
 
-  return <FichaProductoClient producto={producto} relacionados={relacionados} />;
+  const datosEstructurados = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: producto.nombre,
+    description: producto.descripcion || producto.nombre,
+    image: producto.imagen_url || undefined,
+    sku: producto.sku || undefined,
+    category: producto.categoria,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "USD",
+      price: producto.precio_oferta ?? producto.precio,
+      availability:
+        producto.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      url: `https://valion-ecommerce.vercel.app/productos/${producto.id}`,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(datosEstructurados) }}
+      />
+      <FichaProductoClient producto={producto} relacionados={relacionados} />
+    </>
+  );
 }
